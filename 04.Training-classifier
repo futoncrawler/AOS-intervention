@@ -13,7 +13,7 @@ qiime feature-classifier extract-reads \
   --i-sequences silva-138-99-seqs.qza \
   --p-f-primer CCTACGGGNGGCWGCAG \
   --p-r-primer GACTACHVGGGTATCTAATCC \
-  --p-trunc-len 400 \
+  --p-trunc-len 240 \
   --o-reads silva-138-99-ref-seqs.qza
 
 # Train the classifier
