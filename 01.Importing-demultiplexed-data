@@ -1,3 +1,5 @@
+Individual number 111 and 141 are excluded from the analysis due to medication
+
 #change directory to where you wanna do the analysis
 cd /Users/shirai/Desktop/gut-microbiota-analysis/250819_healthy-adult_qiime2-2024.5
 
