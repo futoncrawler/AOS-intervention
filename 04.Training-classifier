@@ -1,12 +1,4 @@
-qiime tools import \
-  --type 'FeatureData[Sequence]' \
-  --input-path silva-138-99-seqs.qza \
-  --output-path silva-138-99-seqs.qza
-
-qiime tools import \
-  --type 'FeatureData[Taxonomy]' \
-  --input-path silva-138-99-tax.qza \
-  --output-path silva-138-99-tax.qza
+download FeatureData[Sequence] silva-138-99-seqs.qza and FeatureData[Taxonomy] silva-138-99-tax.qza from https://docs.qiime2.org/2024.5/data-resources/ save in directory
 
 # Extract reads (replace with your actual primer sequences and amplicon length)
 qiime feature-classifier extract-reads \
