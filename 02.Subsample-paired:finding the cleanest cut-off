@@ -53,3 +53,4 @@ qiime metadata tabulate \
 --o-visualization stats-dada2_trunclen-${i}.qzv \
 ;done
 
+We checked the stats-dada2_trunclen-${i}.qzv data one by one, and find the one with best non-chimeric percentage
