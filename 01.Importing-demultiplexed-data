@@ -21,11 +21,10 @@ conda activate qiime2-amplicon-2024.5
 
 #Importing demultiplexed data that follows some common formatting conventions (the Casava formats)
 qiime tools import \
-  --type 'SampleData[PairedEndSequencesWithQuality]' \
-  --input-path /Users/shirai/Desktop/gut-microbiota-analysis/250819_healthy-adult_qiime2-2024.5/fastq  \                                                 
-  --input-format CasavaOneEightSingleLanePerSampleDirFmt \
-  --output-path demux-paired-end.qza
-
+--type 'SampleData[PairedEndSequencesWithQuality]' \
+--input-path /Users/shirai/Desktop/gut-microbiota-analysis/250819_healthy-adult_qiime2-2024.5/fastq \
+--input-format CasavaOneEightSingleLanePerSampleDirFmt \
+--output-path demux-paired-end.qza
 
 #Visualization of demux-paired-end.qza
 qiime demux summarize \
