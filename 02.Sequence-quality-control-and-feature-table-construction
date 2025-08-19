@@ -50,7 +50,7 @@ This can be useful for exploring data distribution, identifying potential biases
 Subsampling can help balance the read depth across different regions or samples, especially when dealing with uneven coverage.
 This can lead to more accurate downstream analyses, such as variant calling or differential gene expression analysis. 
 
-
+Below is the command/function we used for our sample(s):
 ---------------------------------------------------------------------------------------------------------------------------
 qiime demux subsample-paired \
 --i-sequences demux-paired-end.qza \
