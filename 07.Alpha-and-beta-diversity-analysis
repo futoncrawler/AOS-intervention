@@ -74,6 +74,10 @@ qiime diversity alpha-group-significance \
 --m-metadata-file ../../metadata_16S_adult.txt \
 --o-visualization evenness-group-significance.qzv 
 
+
+Unweighted UniFrac considers only the presence or absence of taxa,
+while weighted UniFrac takes into account the relative abundance of shared taxa
+
 qiime diversity beta-group-significance \
 --i-distance-matrix weighted_unifrac_distance_matrix.qza \
 --m-metadata-file ../../metadata_16S_adult.txt \
