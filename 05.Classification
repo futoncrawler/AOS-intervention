@@ -12,7 +12,7 @@ qiime metadata tabulate \
 --o-visualization trialtrained-taxonomy.qzv
 
 qiime taxa barplot \
---i-table /Users/shirai/Desktop/gut-microbiota-analysis/250819_healthy-adult_qiime2-2024.5/table.qza \                
---i-taxonomy trialtrained-taxonomy.qza \    
---m-metadata-file /Users/shirai/Desktop/gut-microbiota-analysis/250819_healthy-adult_qiime2-2024.5/metadata_16S_adult.txt \    
+--i-table /Users/shirai/Desktop/gut-microbiota-analysis/250819_healthy-adult_qiime2-2024.5/table.qza \
+--i-taxonomy trialtrained-taxonomy.qza \
+--m-metadata-file /Users/shirai/Desktop/gut-microbiota-analysis/250819_healthy-adult_qiime2-2024.5/metadata_16S_adult.txt \
 --o-visualization trialtrained-taxa-bar-plots.qzv
