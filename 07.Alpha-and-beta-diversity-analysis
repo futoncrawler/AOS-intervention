@@ -73,3 +73,10 @@ qiime diversity alpha-group-significance \
 --i-alpha-diversity evenness_vector.qza \
 --m-metadata-file ../../metadata_16S_adult.txt \
 --o-visualization evenness-group-significance.qzv 
+
+qiime diversity beta-group-significance \
+--i-distance-matrix weighted_unifrac_distance_matrix.qza \
+--m-metadata-file ../../metadata_16S_adult.txt \
+--m-metadata-column Group \
+--o-visualization weighted-unifrac-group-significance.qzv \
+--p-pairwise
