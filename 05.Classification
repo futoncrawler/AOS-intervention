@@ -1,0 +1,6 @@
+qiime feature-classifier classify-sklearn \
+--p-n-jobs 1 \
+--verbose \
+--i-reads FeatureData[Sequence]:rep-seqs.qza \
+--i-classifier TaxonomicClassifier \
+--o-classification trialtrained-taxonomy.qza
