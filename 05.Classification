@@ -1,3 +1,5 @@
+Classify reads by taxon using a fitted classifier.
+
 qiime feature-classifier classify-sklearn \
 --p-n-jobs 1 \
 --verbose \
@@ -18,6 +20,10 @@ qiime taxa barplot \
 --o-visualization trialtrained-taxa-bar-plots.qzv
 
 #Relative-abundance
+Collapse groups of features that have the same taxonomic assignment through
+  the specified level. The frequencies of all features will be summed when
+  they are collapsed.
+
 for i in {2..7}; do \
 qiime taxa collapse \
 --i-table ../table.qza \
