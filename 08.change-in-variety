@@ -11,7 +11,7 @@ qiime taxa collapse \
 --i-table table_Standard-Swab-akac.qza \
 --i-taxonomy taxonomy.qza \
 --p-level 6 \
---o-collapsed-table table_Standard-Swab_l7_bsvsas-akac.qza
+--o-collapsed-table table_taxonomy_collapse.qza
 
 #ANCOM
 
