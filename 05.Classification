@@ -59,3 +59,8 @@ qiime feature-table heatmap \
 --m-sample-metadata-file metadata_16S.txt \
 --m-sample-metadata-column Group \
 --o-visualization heatmap_l6-filtered-pre0.5-abu0.01.qzv
+
+qiime feature-table presence-absence \
+--i-table ../table.qza \
+--o-presence-absence-table presence-absence.qza
+
