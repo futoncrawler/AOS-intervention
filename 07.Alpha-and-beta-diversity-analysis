@@ -91,3 +91,10 @@ qiime diversity beta-group-significance \
 --m-metadata-column Group \
 --o-visualization unweighted-unifrac-group-significance.qzv \
 --p-pairwise
+
+#wighted_unifrac_emperor.qzv
+・UniFrac距離に基づいて計算された距離行列の可視化結果 (主成分分析)
+
+
+#weighted-unifrac-group-significance.qzv
+・PERMANOVAで解析
