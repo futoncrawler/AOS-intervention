@@ -14,3 +14,11 @@ qiime phylogeny align-to-tree-mafft-fasttree \
 --o-masked-alignment masked-aligned-rep-seqs.qza \
 --o-tree unrooted-tree.qza \
 --o-rooted-tree rooted-tree.qza
+
+
+qiime diversity alpha-rarefaction \
+--i-table ../table.qza \
+--i-phylogeny rooted-tree.qza \
+--p-max-depth 57962 (look into table.qzv > interactive quality plot > lowest number) \
+--m-metadata-file ../metadata_16S_adult.txt \
+--o-visualization alpha-rarefaction_57962.qzv
