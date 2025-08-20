@@ -1,3 +1,13 @@
+  This pipeline will start by creating a sequence alignment using MAFFT, after
+  which any alignment columns that are phylogenetically uninformative or
+  ambiguously aligned will be removed (masked). The resulting masked alignment
+  will be used to infer a phylogenetic tree and then subsequently rooted at
+  its midpoint. Output files from each step of the pipeline will be saved.
+  This includes both the unmasked and masked MAFFT alignment from q2-alignment
+  methods, and both the rooted and unrooted phylogenies from q2-phylogeny
+  methods.
+
+
 qiime phylogeny align-to-tree-mafft-fasttree \
 --i-sequences ../rep-seqs.qza \
 --o-alignment aligned-rep-seqs.qza \
