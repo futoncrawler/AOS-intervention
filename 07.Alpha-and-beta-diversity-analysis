@@ -80,3 +80,10 @@ qiime diversity beta-group-significance \
 --m-metadata-column Group \
 --o-visualization weighted-unifrac-group-significance.qzv \
 --p-pairwise
+
+qiime diversity beta-group-significance \
+--i-distance-matrix unweighted_unifrac_distance_matrix.qza \
+--m-metadata-file ../../metadata_16S_adult.txt \
+--m-metadata-column Group \
+--o-visualization unweighted-unifrac-group-significance.qzv \
+--p-pairwise
