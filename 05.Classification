@@ -5,6 +5,8 @@ qiime feature-classifier classify-sklearn \
 --i-classifier TaxonomicClassifier \
 --o-classification trialtrained-taxonomy.qza
 
+output ARTIFACT: FeatureData[Taxonomy]
+
 qiime metadata tabulate \
 --m-input-file trialtrained-taxonomy.qza \
 --o-visualization trialtrained-taxonomy.qzv
