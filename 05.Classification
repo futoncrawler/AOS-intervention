@@ -61,10 +61,16 @@ qiime feature-table filter-features-conditionally \
 
 #ヒートマップの作画
 qiime feature-table heatmap \
---i-table read-freqs-level6.qza \
+--i-table filtered-genus-preval0.5-abund0.01.qza \
 --m-sample-metadata-file ../metadata_16S_adult.txt \
 --m-sample-metadata-column Individual \
---o-visualization heatmap_genus-filtered-pre0.5-abu0.01.qzv
+--o-visualization heatmap_filtered-genus-pre0.5-abu0.01.qzv
+
+qiime feature-table heatmap \
+--i-table filtered-species-preval0.5-abund0.01.qza \
+--m-sample-metadata-file ../metadata_16S_adult.txt \
+--m-sample-metadata-column Individual \
+--o-visualization heatmap_filtered-species-pre0.5-abu0.01.qzv
 
 qiime feature-table presence-absence \
 --i-table ../table.qza \
