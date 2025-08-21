@@ -34,14 +34,14 @@ qiime taxa collapse \
 
 for i in {2..7}; do \
 qiime feature-table relative-frequency \
---i-table abundance-level${i}.qza \
---o-relative-frequency-table rel-freq${i}_relabn.qza \
+--i-table read-freqs-level${i}.qza \
+--o-relative-frequency-table rel-abundance${i}_relabn.qza \
 ;done
 
 for i in {2..7}; do \
 qiime metadata tabulate \
---m-input-file rel-freq${i}.qza \
---o-visualization relative-freq${i}.qzv \
+--m-input-file rel-abundance${i}.qza \
+--o-visualization rel-abundance${i}.qzv \
 ;done
 
 
