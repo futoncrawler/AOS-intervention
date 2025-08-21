@@ -29,7 +29,7 @@ qiime taxa collapse \
 --i-table ../table.qza \
 --i-taxonomy stooltrained-taxonomy.qza \
 --p-level $i \
---o-collapsed-table abundance-level${i}.qza \
+--o-collapsed-table read-freqs-level${i}.qza \
 ;done
 
 for i in {2..7}; do \
