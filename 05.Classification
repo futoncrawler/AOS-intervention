@@ -53,6 +53,12 @@ qiime feature-table filter-features-conditionally \
 --p-abundance 0.01 \
 --o-filtered-table genus-filtered-preval0.5-abund0.01.qza
 
+qiime feature-table filter-features-conditionally \
+--i-table rel-abundance7.qza \
+--p-prevalence 0.5 \
+--p-abundance 0.01 \
+--o-filtered-table species-filtered-preval0.5-abund0.01.qza
+
 #ヒートマップの作画
 qiime feature-table heatmap \
 --i-table table-l6-filtered-pre0.5-abu0.01.qza \
