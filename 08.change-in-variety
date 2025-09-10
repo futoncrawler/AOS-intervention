@@ -9,7 +9,7 @@ qiime feature-table filter-samples \
 #Feature表を対象の分類階層に分解
 qiime taxa collapse \
 --i-table table_change_variety.qza \
---i-taxonomy ../taxonomy.qza \
+--i-taxonomy ../human-stool-weighted-taxonomy.qza \
 --p-level 6 \
 --o-collapsed-table table_genus_collapse.qza
 
