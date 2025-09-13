@@ -16,6 +16,15 @@ qiime feature-classifier fit-classifier-naive-bayes \
   --o-classifier silva-138-v3v4-tax.qza
 (Output: Uniform-Classifier)
 
+qiime clawback assemble-weights-from-Qiita \
+--i-classifier /Users/t6/Desktop/Health-adult-trimmed/silva138-138-v3v4-tax.qza \ 
+--i-reference-taxonomy /Users/t6/Desktop/Health-adult-trimmed/silva-138-99-tax.qza \ 
+--i-reference-sequences /Users/t6/Desktop/Health-adult-trimmed/silva-138-v3v4-seqs.qza  \
+--p-metadata-key empo_3 \ 
+--p-metadata-value "Animal distal gut" \
+--p-context Deblur-Illumina-16S-V4-150nt-780653 \ 
+--o-class-weight human-stool-weights-v3v4.qza
+
 # human-stool-weighted
 # class-weight input can be downloaded from: https://github.com/BenKaehler/readytowear/blob/master/data/silva_138_1/full_length/human-stool.qza
 qiime feature-classifier fit-classifier-naive-bayes \
