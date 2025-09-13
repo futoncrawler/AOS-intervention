@@ -18,3 +18,9 @@ qiime feature-classifier fit-classifier-naive-bayes \
 
 Pre-trained classifier is downloaded from:
 https://library.qiime2.org/data-resources#qiime-2-2024-5-present
+
+qiime feature-classifier fit-classifier-naive-bayes \
+--i-reference-reads silva-v3-v4.qza \
+--i-reference-taxonomy silva-138-99-tax.qza \
+--i-class-weight /Users/t6/Desktop/Health-adult-trimmed/silva-138-99-nb-human-stool-weighted-classifier.qza \
+--o-classifier silva138-V3V4-human-stool-classifier.qza
