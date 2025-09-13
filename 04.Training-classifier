@@ -14,13 +14,16 @@ qiime feature-classifier fit-classifier-naive-bayes \
   --i-reference-reads silva-138-99-ref-seqs.qza \
   --i-reference-taxonomy silva-138-99-tax.qza \
   --o-classifier silva-138-v3v4-tax.qza
+(Output: Uniform-Classifier)
 
-
-Pre-trained classifier is downloaded from:
-https://library.qiime2.org/data-resources#qiime-2-2024-5-present
-
+# human-stool-weighted
+# class-weight input can be downloaded from: https://github.com/BenKaehler/readytowear/blob/master/data/silva_138_1/full_length/human-stool.qza
 qiime feature-classifier fit-classifier-naive-bayes \
---i-reference-reads silva-v3-v4.qza \
+--i-reference-reads silva-138-v3v4-seqs.qza \
 --i-reference-taxonomy silva-138-99-tax.qza \
---i-class-weight /Users/t6/Desktop/Health-adult-trimmed/silva-138-99-nb-human-stool-weighted-classifier.qza \
+--i-class-weight human-stool.qza \ #downloaded from github
 --o-classifier silva138-V3V4-human-stool-classifier.qza
+
+
+#Pre-trained full-length classifier is downloaded from:
+https://library.qiime2.org/data-resources#qiime-2-2024-5-present
