@@ -7,10 +7,11 @@ qiime cutadapt demux-paired \
   --o-untrimmed-sequences untrimmed.qza \
   --verbose
 
+#Extracting V4 region from V3-V4 region
 qiime cutadapt trim-paired \
 --i-demultiplexed-sequences demux-paired-end.qza \
 --p-front-f GTGCCAGCMGCCGCGGTAA \
---p-reverse-r GGACTACHVGGGTWTCTAAT \
+--p-front-r GGACTACHVGGGTWTCTAAT \
 --p-discard-untrimmed \
---o-trimmed-sequences trimmed-demux-paired-end.qza
+--o-trimmed-sequences trimmed-demux-paired-end.qza \
 --verbose
