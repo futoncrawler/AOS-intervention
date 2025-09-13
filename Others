@@ -15,3 +15,10 @@ qiime cutadapt trim-paired \
 --p-discard-untrimmed \
 --o-trimmed-sequences trimmed-demux-paired-end.qza \
 --verbose
+
+qiime rescript evaluate-fit-classifier \
+--i-sequences /Users/t6/Desktop/Healthy-adult-v3v4/classifier-training/silva-138-99-seqs.qza  \
+--i-taxonomy /Users/t6/Desktop/Healthy-adult-v3v4/classifier-training/silva-138-99-tax.qza  \
+--o-classifier silva-v3v4.qza \
+--o-evaluation evaluation.qzv \
+--o-observed-taxonomy taxonomy-evaluate.qza
