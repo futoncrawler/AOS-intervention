@@ -1,0 +1,16 @@
+qiime cutadapt demux-paired \
+  --i-seqs demux-paired-seqs.qza \
+  --m-barcodes-file metadata_16s_adult.txt \
+  --m-barcodes-column COLUMN \
+  --p-error-rate 0 \
+  --o-per-sample-sequences demultiplexed-seqs.qza \
+  --o-untrimmed-sequences untrimmed.qza \
+  --verbose
+
+qiime cutadapt trim-paired \
+--i-demultiplexed-sequences demux-paired-end.qza \
+--p-front-f GTGCCAGCMGCCGCGGTAA \
+--p-reverse-r GGACTACHVGGGTWTCTAAT \
+--p-discard-untrimmed \
+--o-trimmed-sequences trimmed-demux-paired-end.qza
+--verbose
