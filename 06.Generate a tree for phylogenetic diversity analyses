@@ -16,7 +16,7 @@ rooting is applied to place  the root of the tree at the midpoint of the longest
 
 
 qiime phylogeny align-to-tree-mafft-fasttree \
---i-sequences ../rep-seqs.qza \
+--i-sequences rep-seqs.qza \
 --o-alignment aligned-rep-seqs.qza \
 --o-masked-alignment masked-aligned-rep-seqs.qza \
 --o-tree unrooted-tree.qza \
@@ -35,8 +35,8 @@ information presented in the table.qzv file that was created above. Choose a val
 high as possible (so you retain more sequences per sample) while excluding as few samples as possible.
 
 qiime diversity alpha-rarefaction \
---i-table ../table.qza \
+--i-table table.qza \
 --i-phylogeny rooted-tree.qza \
---p-max-depth 57962 (look into table.qzv > frequency per sample > median frequency ---> round it) \
---m-metadata-file ../metadata_16S_adult.txt \
---o-visualization alpha-rarefaction_57962.qzv
+--p-max-depth 80000 (look into table.qzv > frequency per sample (79610) > median frequency ---> round it) \
+--m-metadata-file metadata_16S_adult.txt \
+--o-visualization alpha-rarefaction_80k.qzv
