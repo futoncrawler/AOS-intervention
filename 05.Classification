@@ -29,19 +29,19 @@ qiime taxa collapse \
 --i-table ../table.qza \
 --i-taxonomy stooltrained-taxonomy.qza \
 --p-level $i \
---o-collapsed-table read-freqs-level${i}.qza \
+--o-collapsed-table table-class-${i}.qza \
 ;done
 
 for i in {2..7}; do \
 qiime feature-table relative-frequency \
---i-table read-freqs-level${i}.qza \
---o-relative-frequency-table rel-abundance${i}_relabn.qza \
+--i-table table-class-${i}.qza \
+--o-relative-frequency-table rel-abundance-class-${i}.qza \
 ;done
 
 for i in {2..7}; do \
 qiime metadata tabulate \
---m-input-file rel-abundance${i}.qza \
---o-visualization rel-abundance${i}.qzv \
+--m-input-file rel-abundance-class-${i}.qza \
+--o-visualization rel-abundance-class-${i}.qzv \
 ;done
 
 
