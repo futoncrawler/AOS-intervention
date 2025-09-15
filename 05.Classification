@@ -34,7 +34,7 @@ qiime taxa collapse \
 
 for i in {2..7}; do \
 qiime feature-table relative-frequency \
---i-table table-class-${i}.qza \
+--i-table rel-freqs-class-${i}.qza \
 --o-relative-frequency-table rel-abundance-class-${i}.qza \
 ;done
 
@@ -48,13 +48,13 @@ qiime metadata tabulate \
 #ヒートマップ
 #このままだと多くの腸内細菌が反映されるため、フィルターをかける。以下は50%以上のサンプルに出現、占有率1%以上
 qiime feature-table filter-features-conditionally \
---i-table read-freqs-level6.qza \
+--i-table rel-freqs-level6.qza \
 --p-prevalence 0.5 \
 --p-abundance 0.01 \
 --o-filtered-table filtered-genus-preval0.5-abund0.01.qza
 
 qiime feature-table filter-features-conditionally \
---i-table read-freqs-level7.qza \
+--i-table rel-freqs-level7.qza \
 --p-prevalence 0.5 \
 --p-abundance 0.01 \
 --o-filtered-table filtered-species-preval0.5-abund0.01.qza
@@ -63,13 +63,13 @@ qiime feature-table filter-features-conditionally \
 qiime feature-table heatmap \
 --i-table filtered-genus-preval0.5-abund0.01.qza \
 --m-sample-metadata-file ../metadata_16S_adult.txt \
---m-sample-metadata-column Individual \
+--m-sample-metadata-column Group \
 --o-visualization heatmap_filtered-genus-pre0.5-abu0.01.qzv
 
 qiime feature-table heatmap \
 --i-table filtered-species-preval0.5-abund0.01.qza \
 --m-sample-metadata-file ../metadata_16S_adult.txt \
---m-sample-metadata-column Individual \
+--m-sample-metadata-column Group \
 --o-visualization heatmap_filtered-species-pre0.5-abu0.01.qzv
 
 qiime feature-table presence-absence \
