@@ -37,6 +37,6 @@ high as possible (so you retain more sequences per sample) while excluding as fe
 qiime diversity alpha-rarefaction \
 --i-table ../table.qza \
 --i-phylogeny rooted-tree.qza \
---p-max-depth 57962 (look into table.qzv > interactive quality plot > lowest number) \
+--p-max-depth 57962 (look into table.qzv > frequency per sample > median frequency ---> round it) \
 --m-metadata-file ../metadata_16S_adult.txt \
 --o-visualization alpha-rarefaction_57962.qzv
