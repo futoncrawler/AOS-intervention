@@ -29,7 +29,7 @@ qiime taxa collapse \
 --i-table ../table.qza \
 --i-taxonomy stooltrained-taxonomy.qza \
 --p-level $i \
---o-collapsed-table table-class-${i}.qza \
+--o-collapsed-table rel-freqs-class-${i}.qza \
 ;done
 
 for i in {2..7}; do \
@@ -48,29 +48,29 @@ qiime metadata tabulate \
 #ヒートマップ
 #このままだと多くの腸内細菌が反映されるため、フィルターをかける。以下は50%以上のサンプルに出現、占有率1%以上
 qiime feature-table filter-features-conditionally \
---i-table rel-freqs-level6.qza \
+--i-table rel-freqs-class-6.qza \
 --p-prevalence 0.5 \
 --p-abundance 0.01 \
 --o-filtered-table filtered-genus-preval0.5-abund0.01.qza
 
 qiime feature-table filter-features-conditionally \
---i-table rel-freqs-level7.qza \
+--i-table rel-freqs-class-2.qza \
 --p-prevalence 0.5 \
 --p-abundance 0.01 \
---o-filtered-table filtered-species-preval0.5-abund0.01.qza
+--o-filtered-table filtered-phylum-preval0.5-abund0.01.qza
 
 #ヒートマップの作画
 qiime feature-table heatmap \
 --i-table filtered-genus-preval0.5-abund0.01.qza \
---m-sample-metadata-file ../metadata_16S_adult.txt \
+--m-sample-metadata-file metadata_16S_adult.txt \
 --m-sample-metadata-column Group \
 --o-visualization heatmap_filtered-genus-pre0.5-abu0.01.qzv
 
 qiime feature-table heatmap \
---i-table filtered-species-preval0.5-abund0.01.qza \
---m-sample-metadata-file ../metadata_16S_adult.txt \
+--i-table filtered-phylum-preval0.5-abund0.01.qza \
+--m-sample-metadata-file metadata_16S_adult.txt \
 --m-sample-metadata-column Group \
---o-visualization heatmap_filtered-species-pre0.5-abu0.01.qzv
+--o-visualization heatmap_filtered-phylum-pre0.5-abu0.01.qzv
 
 qiime feature-table presence-absence \
 --i-table ../table.qza \
