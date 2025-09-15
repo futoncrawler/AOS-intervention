@@ -16,6 +16,11 @@ qiime feature-classifier fit-classifier-naive-bayes \
   --o-classifier silva-138-v3v4-tax.qza
 (Output: Uniform-Classifier)
 
+qiime rescript filter-taxa \
+  --i-taxonomy taxonomy.qza \
+  --m-ids-to-keep-file trimmed-sequences.qza \
+  --o-filtered-taxonomy filtered-taxonomy.qza
+
 qiime clawback assemble-weights-from-Qiita \
 --i-classifier /Users/t6/Desktop/Health-adult-trimmed/silva138-138-v3v4-tax.qza \ 
 --i-reference-taxonomy /Users/t6/Desktop/Health-adult-trimmed/silva-138-99-tax.qza \ 
