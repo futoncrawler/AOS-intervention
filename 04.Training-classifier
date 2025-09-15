@@ -11,7 +11,7 @@ qiime feature-classifier extract-reads \
 
 # Train the classifier
 qiime feature-classifier fit-classifier-naive-bayes \
-  --i-reference-reads silva-138-99-ref-seqs.qza \
+  --i-reference-reads silva-138-v3v4-seqs.qza \
   --i-reference-taxonomy silva-138-99-tax.qza \
   --o-classifier silva-138-v3v4-tax.qza
 (Output: Uniform-Classifier)
