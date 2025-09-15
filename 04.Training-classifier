@@ -16,6 +16,16 @@ qiime feature-classifier fit-classifier-naive-bayes \
   --o-classifier silva-138-v3v4-tax.qza
 (Output: Uniform-Classifier)
 
+# Test the classifier
+qiime feature-classifier classify-sklearn \
+  --i-classifier silva-138-v3v4-tax.qza \
+  --i-reads silva-138-v3v4-seqs.qza \
+  --o-classification silva-138-99-tax.qza
+
+qiime metadata tabulate \
+  --m-input-file silva-138-99-tax.qza \
+  --o-visualization silva-138-99-tax.qzv
+
 qiime rescript filter-taxa \
   --i-taxonomy taxonomy.qza \
   --m-ids-to-keep-file trimmed-sequences.qza \
