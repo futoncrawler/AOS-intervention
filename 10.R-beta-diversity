@@ -1,0 +1,66 @@
+> library(vegan)
+Loading required package: permute
+This is vegan 2.7-2
+> library(ggplot2)
+> library(dplyr)
+> bray_curtis <- read.delim("~/Desktop/Healthy-adults-V3V4/sampling-depth-58000/exported-bray-curtis/distance-matrix.tsv", row.names = 1, check.names = FALSE)
+> bray_dist <- as.dist(as.matrix(bray_curtis))
+> metadata <- read.delim("~/Desktop/Healthy-adults-V3V4/sampling-depth-58000/exported-bray-curtis/metadata_16S_adult.txt", header = TRUE)
+> metadata <- metadata[metadata$SampleID %in% rownames(bray_curtis), ]
+> rownames(metadata) <- metadata$SampleID
+> metadata <- metadata[rownames(bray_curtis), ]
+> bray_pcoa <- cmdscale(bray_dist, eig = TRUE, k = 2)
+> pcoa_df <- as.data.frame(bray_pcoa$points)
+> colnames(pcoa_df) <- c("PC1", "PC2")
+> pcoa_df$SampleID <- rownames(pcoa_df)
+> pcoa_df <- left_join(pcoa_df, metadata, by = "SampleID")
+> var_explained <- round(100 * bray_pcoa$eig / sum(bray_pcoa$eig), 1)
+> ggplot(pcoa_df, aes(x = PC1, y = PC2, color = Group)) +
++   geom_point(size = 3, alpha = 0.8) +
++   theme_minimal() +
++   labs(
++     title = "PCoA (Bray-Curtis Distance)",
++     x = paste0("PC1 (", var_explained[1], "%)"),
++     y = paste0("PC2 (", var_explained[2], "%)")
++   ) +
++   theme(plot.title = element_text(hjust = 0.5))
+> + stat_ellipse(level = 0.95, linetype = 2, size = 0.8)
+Error in `+.gg`:
+! Cannot use `+` with a single argument.
+ℹ Did you accidentally put `+` on a new line?
+Run `rlang::last_trace()` to see where the error occurred.
+Warning message:
+Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+ℹ Please use `linewidth` instead.
+This warning is displayed once every 8 hours.
+Call `lifecycle::last_lifecycle_warnings()` to see where this warning was generated. 
+> ggplot(pcoa_df, aes(x = PC1, y = PC2, color = Group)) +
++   geom_point(size = 3, alpha = 0.8) +
++   theme_minimal() +
++   labs(
++     title = "PCoA (Bray-Curtis Distance)",
++     x = paste0("PC1 (", var_explained[1], "%)"),
++     y = paste0("PC2 (", var_explained[2], "%)")
++   ) +
++   theme(plot.title = element_text(hjust = 0.5)) + stat_ellipse(level = 0.95, linetype = 2, size = 0.8)
+> permanova <- adonis2(bray_dist ~ Group, data = metadata, permutations = 999)
+> print(permanova)
+Permutation test for adonis under reduced model
+Permutation: free
+Number of permutations: 999
+
+adonis2(formula = bray_dist ~ Group, data = metadata, permutations = 999)
+         Df SumOfSqs      R2      F Pr(>F)
+Model     1   0.0766 0.00683 0.2339      1
+Residual 34  11.1366 0.99317              
+Total    35  11.2132 1.00000              
+> dispersion <- betadisper(bray_dist, metadata$Group)
+> anova(dispersion)
+Analysis of Variance Table
+
+Response: Distances
+          Df   Sum Sq   Mean Sq F value Pr(>F)
+Groups     1 0.003586 0.0035858  0.6992 0.4089
+Residuals 34 0.174361 0.0051283               
+> ggsave("bray_curtis_pcoa.png", width = 6, height = 5, dpi = 600)
+> 
