@@ -1,0 +1,63 @@
+# =======================================================
+# Bray–Curtis PCoA with fixed color scheme
+# =======================================================
+library(vegan)
+library(ggplot2)
+library(dplyr)
+
+# 1️⃣ Load data
+bray_curtis <- read.delim(
+  "~/Desktop/Healthy-adults-V3V4/sampling-depth-58000/exported-bray-curtis/distance-matrix.tsv",
+  row.names = 1, check.names = FALSE
+)
+
+metadata <- read.delim(
+  "~/Desktop/Healthy-adults-V3V4/sampling-depth-58000/exported-bray-curtis/metadata_16S_adult.txt",
+  header = TRUE, sep = "\t"
+)
+
+# 2️⃣ Match samples between files
+metadata <- metadata[metadata$SampleID %in% rownames(bray_curtis), ]
+rownames(metadata) <- metadata$SampleID
+metadata <- metadata[rownames(bray_curtis), ]
+
+# 3️⃣ Convert to distance object
+bray_dist <- as.dist(as.matrix(bray_curtis))
+
+# 4️⃣ PCoA
+bray_pcoa <- cmdscale(bray_dist, eig = TRUE, k = 2)
+pcoa_df <- as.data.frame(bray_pcoa$points)
+colnames(pcoa_df) <- c("PC1", "PC2")
+pcoa_df$SampleID <- rownames(pcoa_df)
+
+pcoa_df <- left_join(pcoa_df, metadata, by = "SampleID")
+
+var_explained <- round(100 * bray_pcoa$eig / sum(bray_pcoa$eig), 1)
+
+# 5️⃣ Set factor order (Baseline first)
+pcoa_df$Group <- factor(pcoa_df$Group, levels = c("Baseline", "AOS-4-weeks"))
+
+# 6️⃣ Define your custom colors (same as your example)
+custom_colors <- c("Baseline" = "#00BFC4",   # teal blue-green
+                   "AOS-4-weeks" = "#F8766D") # pinkish-salmon
+
+# 7️⃣ Plot
+ggplot(pcoa_df, aes(x = PC1, y = PC2, color = Group)) +
+  geom_point(size = 3, alpha = 0.8) +
+  stat_ellipse(level = 0.95, linetype = 2, linewidth = 0.8) +
+  scale_color_manual(values = custom_colors) +
+  theme_minimal(base_size = 13) +
+  labs(
+    title = "PCoA (Bray–Curtis Distance)",
+    x = paste0("PC1 (", var_explained[1], "%)"),
+    y = paste0("PC2 (", var_explained[2], "%)")
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    legend.title = element_blank(),
+    legend.position = "right"
+  )
+
+# 8️⃣ PERMANOVA
+permanova <- adonis2(bray_dist ~ Group, data = metadata, permutations = 999)
+print(permanova)
