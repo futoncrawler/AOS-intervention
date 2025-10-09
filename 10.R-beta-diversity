@@ -64,3 +64,62 @@ Groups     1 0.003586 0.0035858  0.6992 0.4089
 Residuals 34 0.174361 0.0051283               
 > ggsave("bray_curtis_pcoa.png", width = 6, height = 5, dpi = 600)
 > 
+
+
+🧪 Full R Code: UniFrac Beta Diversity Analysis
+
+We’ll walk through Unweighted UniFrac, and then note how to switch to Weighted.
+
+📁 Step 1: Load libraries
+library(vegan)
+library(ggplot2)
+library(dplyr)
+
+📄 Step 2: Load distance matrix and metadata
+# Load UniFrac distance matrix
+unifrac <- read.delim("~/Desktop/Healthy-adults-V3V4/sampling-depth-58000/beta-diversity/exported-unweighted-unifrac/distance-matrix.tsv", row.names = 1, check.names = FALSE)
+
+# Convert to distance object
+unifrac_dist <- as.dist(as.matrix(unifrac))
+
+# Load metadata
+metadata <- read.delim("~/Desktop/Healthy-adults-V3V4/sampling-depth-58000/shannon_vector_results/metadata_16S_adult.txt", header = TRUE)
+
+# Match metadata to distance matrix
+metadata <- metadata[metadata$SampleID %in% rownames(unifrac), ]
+rownames(metadata) <- metadata$SampleID
+metadata <- metadata[rownames(unifrac), ]
+
+📊 Step 3: Ordination (PCoA)
+unifrac_pcoa <- cmdscale(unifrac_dist, eig = TRUE, k = 2)
+
+pcoa_df <- as.data.frame(unifrac_pcoa$points)
+colnames(pcoa_df) <- c("PC1", "PC2")
+pcoa_df$SampleID <- rownames(pcoa_df)
+
+pcoa_df <- left_join(pcoa_df, metadata, by = "SampleID")
+
+📈 Step 4: Plot PCoA
+var_explained <- round(100 * unifrac_pcoa$eig / sum(unifrac_pcoa$eig), 1)
+
+ggplot(pcoa_df, aes(x = PC1, y = PC2, color = Group)) +
+  geom_point(size = 3, alpha = 0.8) +
+  stat_ellipse(level = 0.95, linetype = 2, size = 0.8) +
+  theme_minimal() +
+  labs(
+    title = "PCoA (Unweighted UniFrac Distance)",
+    x = paste0("PC1 (", var_explained[1], "%)"),
+    y = paste0("PC2 (", var_explained[2], "%)")
+  ) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+🧪 Step 5: PERMANOVA
+permanova <- adonis2(unifrac_dist ~ Group, data = metadata, permutations = 999)
+print(permanova)
+
+⚠️ Optional: Homogeneity of dispersion
+disp <- betadisper(unifrac_dist, metadata$Group)
+anova(disp)
+
+💾 Save Plot
+ggsave("unweighted_unifrac_pcoa.png", width = 6, height = 5, dpi = 300)
