@@ -22,3 +22,48 @@ qiime rescript evaluate-fit-classifier \
 --o-classifier silva-v3v4.qza \
 --o-evaluation evaluation.qzv \
 --o-observed-taxonomy taxonomy-evaluate.qza
+
+
+# Load required libraries
+library(ggplot2)
+library(dplyr)
+library(ggpubr)
+
+# 1. Load Shannon diversity data
+shannon <- read.delim("~/Desktop/Healthy-adults-V3V4/sampling-depth-58000/chao1_vector_results/alpha-diversity-chao1.tsv", comment.char = "#")
+colnames(shannon)[1] <- "SampleID"
+
+# 2. Load metadata
+metadata <- read.delim("sample-metadata.tsv", header = TRUE)
+
+# 3. Merge on sample-id
+merged <- merge(shannon, metadata, by = "sample-id")
+
+# 📝 Replace with your actual group column (e.g., Treatment, Group, Condition)
+group_col <- "Treatment"
+
+# 4. Perform Kruskal-Wallis test
+formula <- as.formula(paste("Shannon ~", group_col))
+kruskal_result <- kruskal.test(formula, data = merged)
+
+# 5. Prepare annotation text
+p_val <- kruskal_result$p.value
+annotation_label <- ifelse(p_val > 0.05, "n.s.", paste0("p = ", signif(p_val, 3)))
+
+# 6. Plot boxplot + jitter + significance label
+ggplot(merged, aes_string(x = group_col, y = "Shannon", fill = group_col)) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.6) +
+  geom_jitter(width = 0.15, alpha = 0.6, color = "black") +
+  theme_minimal() +
+  labs(title = "Shannon Diversity by Group",
+       y = "Shannon Diversity Index",
+       x = group_col) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  annotate("text",
+           x = 1.5, 
+           y = max(merged$Shannon, na.rm = TRUE) + 0.2,
+           label = annotation_label,
+           size = 5)
+  
+# 7. Print the test result in console
+print(kruskal_result)
