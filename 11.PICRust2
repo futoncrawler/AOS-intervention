@@ -83,3 +83,59 @@ res_df <- res$res$diff_abn
 
 # Save results
 write.csv(res_df, "ancombc_pathway_diff_abundance.csv")
+
+# Assuming:
+# feature_table: samples x taxa (relative abundance numeric matrix or data.frame)
+# metadata: with sample IDs and a column 'Timepoint' having values "Before" and "After"
+# Paired samples are in the same order in both "Before" and "After"
+
+# Example: reorder your data so samples are paired
+before_samples <- rownames(metadata)[metadata$Timepoint == "Before"]
+after_samples <- rownames(metadata)[metadata$Timepoint == "After"]
+
+# Make sure before_samples[i] corresponds to after_samples[i] (paired)
+# If not, reorder accordingly
+
+# Subset feature table by before/after
+feature_before <- feature_table[before_samples, ]
+feature_after <- feature_table[after_samples, ]
+
+# Check dimensions and order
+stopifnot(nrow(feature_before) == nrow(feature_after))
+
+# Initialize results dataframe
+results <- data.frame(
+  Taxon = colnames(feature_table),
+  p_value = NA,
+  direction = NA,
+  stringsAsFactors = FALSE
+)
+
+# Run paired Wilcoxon test per taxon
+for (i in seq_along(results$Taxon)) {
+  taxon <- results$Taxon[i]
+  
+  # Extract paired values
+  x_before <- feature_before[[taxon]]
+  x_after <- feature_after[[taxon]]
+  
+  # Perform paired Wilcoxon test
+  test <- wilcox.test(x_after, x_before, paired = TRUE)
+  results$p_value[i] <- test$p.value
+  
+  # Determine direction (median after - median before)
+  median_diff <- median(x_after - x_before)
+  results$direction[i] <- ifelse(median_diff > 0, "Increased", "Decreased")
+}
+
+# Adjust p-values for multiple testing (FDR)
+results$p_adj <- p.adjust(results$p_value, method = "BH")
+
+# Filter significant taxa
+significant_taxa <- results[results$p_adj < 0.05, ]
+
+# View significant taxa
+print(significant_taxa)
+
+# Optional: write to CSV
+write.csv(significant_taxa, "significant_taxa_wilcoxon.csv", row.names = FALSE)
