@@ -139,3 +139,123 @@ print(significant_taxa)
 
 # Optional: write to CSV
 write.csv(significant_taxa, "significant_taxa_wilcoxon.csv", row.names = FALSE)
+
+############################################################
+# Agarooligosaccharide (AOS) Intervention
+# KO differential analysis (PICRUSt2 output)
+# Includes fold-change + FDR tiers (<0.05 and <0.1)
+############################################################
+
+# --- Step 1: Install/load required packages ---
+required_packages <- c("tidyverse", "ggrepel", "ggpubr", "progress")
+for (pkg in required_packages) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    install.packages(pkg, repos = "https://cloud.r-project.org")
+  }
+}
+
+library(tidyverse)
+library(ggrepel)
+library(ggpubr)
+library(progress)
+
+# --- Step 2: Load data files ---
+ko <- read.delim("ko-feature-table.biom.tsv", header = TRUE, sep = "\t", check.names = FALSE)
+meta <- read.delim("metadata_16S_adult.txt", header = TRUE, sep = "\t")
+
+# --- Step 3: Merge KO table with metadata ---
+merged <- merge(ko, meta, by = "SampleID")
+
+# --- Step 4: Split into before (Baseline) and after (AOS-4-weeks) ---
+baseline <- merged %>% filter(Group == "Baseline")
+aos <- merged %>% filter(Group == "AOS-4-weeks")
+
+# Check individuals match
+stopifnot(all(sort(unique(baseline$Individiual)) == sort(unique(aos$Individiual))))
+
+# --- Step 5: Paired Wilcoxon test for each KO ---
+ko_cols <- setdiff(colnames(ko), "SampleID")
+results <- data.frame(KO = ko_cols, W = NA, p = NA)
+
+pb <- progress_bar$new(
+  format = "  Testing KOs [:bar] :percent ETA: :eta",
+  total = length(ko_cols), clear = FALSE, width = 60
+)
+
+for (i in seq_along(ko_cols)) {
+  pb$tick()
+  ko_name <- ko_cols[i]
+  before <- baseline[match(aos$Individiual, baseline$Individiual), ko_name]
+  after  <- aos[, ko_name]
+  if (all(is.na(before)) || all(is.na(after)) || sd(c(before, after)) == 0) next
+  test <- wilcox.test(before, after, paired = TRUE, exact = FALSE)
+  results$W[i] <- test$statistic
+  results$p[i] <- test$p.value
+}
+
+cat("\n✅ Wilcoxon tests complete!\n")
+
+# --- Step 6: Adjust for multiple testing ---
+results$FDR <- p.adjust(results$p, method = "BH")
+
+# --- Step 7: Compute fold change ---
+fold_change <- sapply(ko_cols, function(x) {
+  mean(aos[[x]], na.rm = TRUE) / mean(baseline[[x]], na.rm = TRUE)
+})
+results$FoldChange <- fold_change
+results$log2FC <- log2(fold_change)
+
+# --- Step 8: Define tiers ---
+strict_sig <- results %>%
+  filter(FDR < 0.05 & (FoldChange >= 2 | FoldChange <= 0.5))
+suggestive_sig <- results %>%
+  filter(FDR >= 0.05 & FDR < 0.1 & (FoldChange >= 2 | FoldChange <= 0.5))
+p_only_sig <- results %>%
+  filter(p < 0.05 & (FoldChange >= 2 | FoldChange <= 0.5))
+
+cat("\nStrict FDR<0.05 hits:", nrow(strict_sig))
+cat("\nSuggestive FDR<0.1 hits:", nrow(suggestive_sig))
+cat("\nRaw p<0.05 hits (exploratory):", nrow(p_only_sig), "\n")
+
+# --- Step 9: Save results ---
+write.table(results, "all_KO_results.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(strict_sig, "significant_KOs_FDR0.05_2fold.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(suggestive_sig, "significant_KOs_FDR0.1_2fold.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(p_only_sig, "significant_KOs_p0.05_2fold.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
+
+# --- Step 10: Volcano plot (label tiers) ---
+results$Significance <- "NS"
+results$Significance[results$FDR < 0.1 & results$FoldChange >= 2] <- "Up (FDR<0.1)"
+results$Significance[results$FDR < 0.1 & results$FoldChange <= 0.5] <- "Down (FDR<0.1)"
+
+volcano_plot <- ggplot(results, aes(x = log2FC, y = -log10(FDR), color = Significance)) +
+  geom_point(alpha = 0.6) +
+  scale_color_manual(values = c("Up (FDR<0.1)" = "red",
+                                "Down (FDR<0.1)" = "blue",
+                                "NS" = "grey70")) +
+  geom_vline(xintercept = c(-1, 1), linetype = "dotted") +
+  geom_hline(yintercept = -log10(0.1), linetype = "dotted", color = "orange") +
+  geom_text_repel(
+    data = results %>% filter(FDR < 0.1) %>% top_n(10, wt = -log10(FDR)),
+    aes(label = KO), size = 3
+  ) +
+  theme_minimal(base_size = 14) +
+  labs(
+    title = "Differential KO abundance (≥2× fold change)",
+    subtitle = "Red = Upregulated (FDR<0.1), Blue = Downregulated (FDR<0.1)",
+    x = "log2 Fold Change (AOS / Baseline)",
+    y = "-log10(FDR)"
+  )
+
+ggsave("KO_volcano_plot_FDR0.1_2fold.png", volcano_plot, width = 8, height = 6)
+
+# --- Step 11: Done ---
+cat("\n✅ Analysis complete!\n")
+cat("Results saved as:\n",
+    " - all_KO_results.tsv\n",
+    " - significant_KOs_FDR0.05_2fold.tsv\n",
+    " - significant_KOs_FDR0.1_2fold.tsv\n",
+    " - significant_KOs_p0.05_2fold.tsv\n",
+    " - KO_volcano_plot_FDR0.1_2fold.png\n")
+
+browseURL(getwd())
