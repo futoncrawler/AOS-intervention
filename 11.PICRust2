@@ -39,3 +39,47 @@ note（ノート）
 
 Then it shows commands to export the .qza results (like pathway_abundance.qza, ec_metagenome.qza, ko_metagenome.qza) to text/BIOM formats and convert to .tsv via biom convert. 
 note（ノート）
+
+
+# Install ANCOM-BC if you haven't yet
+if (!requireNamespace("ANCOMBC", quietly = TRUE)) {
+  install.packages("remotes")
+  remotes::install_github("FrederickHuangLin/ANCOMBC")
+}
+
+library(ANCOMBC)
+
+# Read your data
+raw_table <- read.delim("pathway_abundance.tsv", row.names = 1, check.names = FALSE)
+feature_table_t <- t(raw_table)  # samples as rows
+
+metadata <- read.delim("metadata.tsv", header = TRUE, stringsAsFactors = FALSE)
+rownames(metadata) <- metadata[[1]]
+metadata <- metadata[, -1, drop = FALSE]
+
+# Make sure rows match
+metadata <- metadata[rownames(feature_table_t), , drop = FALSE]
+
+# Run ANCOM-BC
+res <- ancombc(
+  feature_table_t,
+  metadata = metadata,
+  formula = "Group",
+  p_adj_method = "holm",
+  zero_cut = 0.90,       # filter taxa with >90% zeros
+  lib_cut = 1000,        # minimum library size
+  group = "Group",
+  struc_zero = TRUE,
+  neg_lb = TRUE,
+  tol = 1e-5,
+  max_iter = 100,
+  conserve = TRUE,
+  alpha = 0.05,
+  global = TRUE
+)
+
+# Extract results table
+res_df <- res$res$diff_abn
+
+# Save results
+write.csv(res_df, "ancombc_pathway_diff_abundance.csv")
