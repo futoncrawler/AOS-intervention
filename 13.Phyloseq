@@ -1,78 +1,76 @@
+# ===============================
+# Load required packages
+# ===============================
+library(qiime2R)       # to read QIIME2 artifacts
+library(phyloseq)      # microbiome data structure
+library(tidyverse)     # for data wrangling
+library(ggplot2)       # for plotting
 
-##########################################################
-# 📊 Build phyloseq object from QIIME2 files (full script)
-# Author: Natasia 💫
-# Requirements: qiime2R, phyloseq, tidyr, ggplot2
-##########################################################
+# ===============================
+# Step 1. Import QIIME2 files
+# ===============================
+# Replace these filenames with your actual paths
+otu_table_object <- read_qza("feature-table.qza")$data
+taxonomy_object  <- read_qza("taxonomy.qza")$data
+metadata         <- read_tsv("metadata.tsv") %>%
+  column_to_rownames("SampleID")
+tree_object      <- read_qza("rooted-tree.qza")$data
 
-# 1️⃣ Install and load required packages
-if (!requireNamespace("qiime2R", quietly = TRUE)) remotes::install_github("jbisanz/qiime2R")
-if (!requireNamespace("phyloseq", quietly = TRUE)) install.packages("phyloseq")
-if (!requireNamespace("tidyr", quietly = TRUE)) install.packages("tidyr")
+# ===============================
+# Step 2. Prepare data for phyloseq
+# ===============================
+# Convert to phyloseq-compatible formats
+OTU  <- otu_table(otu_table_object, taxa_are_rows = TRUE)
+TAX  <- tax_table(as.matrix(taxonomy_object %>%
+                             separate(Taxon, into = c("Kingdom","Phylum","Class","Order","Family","Genus","Species"),
+                                      sep = ";", fill = "right")))
+META <- sample_data(metadata)
+TREE <- phy_tree(tree_object)
 
-library(qiime2R)
-library(phyloseq)
-library(tidyr)
-library(ggplot2)
+# ===============================
+# Step 3. Combine into a single phyloseq object
+# ===============================
+ps <- phyloseq(OTU, TAX, META, TREE)
 
-# 2️⃣ Import your QIIME2 artifacts
-# (Make sure your working directory has these files or adjust paths)
-table_qza <- read_qza("table.qza")          # Feature table
-taxonomy_qza <- read_qza("taxonomy.qza")    # Taxonomy
-metadata <- read.table("metadata.tsv", header = TRUE, sep = "\t", row.names = 1)
+# ===============================
+# Step 4. Ensure your Group variable is correct and ordered
+# ===============================
+sample_data(ps)$Group <- factor(sample_data(ps)$Group,
+                                levels = c("Baseline", "AOS-4-weeks"))
 
-# Optional: include if you have a phylogenetic tree
-# tree_qza <- read_qza("rooted-tree.qza")
+# ===============================
+# Step 5. Convert to long format for plotting
+# ===============================
+df <- psmelt(ps)
 
-# 3️⃣ Extract the actual data
-otu_table_object <- table_qza$data
-taxonomy_object <- taxonomy_qza$data
+# Make sure samples are ordered by Group
+df$SampleID <- factor(df$Sample,
+                      levels = df %>%
+                        distinct(Sample, Group) %>%
+                        arrange(Group, Sample) %>%
+                        pull(Sample))
 
-# 4️⃣ Clean the taxonomy table
-taxonomy_object <- as.data.frame(taxonomy_object)
-rownames(taxonomy_object) <- taxonomy_object$Feature.ID
-taxonomy_object <- taxonomy_object[, -1]  # remove the Feature.ID column
-
-# 5️⃣ Match taxa across objects (avoid mismatches)
-common_taxa <- intersect(rownames(otu_table_object), rownames(taxonomy_object))
-otu_table_object <- otu_table_object[common_taxa, ]
-taxonomy_object <- taxonomy_object[common_taxa, ]
-
-# 6️⃣ Build the preliminary phyloseq object
-ps <- phyloseq(
-  otu_table(otu_table_object, taxa_are_rows = TRUE),
-  tax_table(as.matrix(taxonomy_object)),
-  sample_data(metadata)
-  # , phy_tree(tree_qza$data)  # uncomment if you have a tree
-)
-
-# 7️⃣ Split single 'Taxon' column into ranks if needed
-if ("Taxon" %in% colnames(tax_table(ps))) {
-  taxonomy_df <- as.data.frame(tax_table(ps))
-  taxonomy_split <- separate(
-    taxonomy_df,
-    col = "Taxon",
-    into = c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"),
-    sep = "; ",
-    fill = "right"
-  )
-  tax_table(ps) <- tax_table(as.matrix(taxonomy_split))
-}
-
-# 8️⃣ Verify that everything looks correct
-print(ps)
-colnames(tax_table(ps))   # Should show Kingdom, Phylum, Class, etc.
-sample_names(ps)[1:5]
-
-# 9️⃣ Quick visualization — stacked bar plot by Phylum
-plot_bar(ps, fill = "Phylum") +
+# ===============================
+# Step 6. Create bar plot with borders
+# ===============================
+p <- ggplot(df, aes(x = SampleID, y = Abundance, fill = Phylum)) +
+  geom_bar(stat = "identity", color = "black", size = 0.2) +  # borders added
   theme_bw() +
   labs(title = "Gut Microbiota Composition by Phylum",
-       x = "Sample",
+       x = "Sample (ordered by Group)",
        y = "Relative Abundance") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        panel.grid = element_blank()) +
+  facet_grid(~Group, scales = "free_x", space = "free_x")
 
-##########################################################
-# ✅ Done! You now have a fully functional phyloseq object
-# You can use it for LEfSe, diversity analysis, etc.
-##########################################################
+# ===============================
+# Step 7. Display and save the plot
+# ===============================
+print(p)
+
+ggsave("gut_microbiota_phylum_bordered.png", p,
+       width = 12, height = 6, dpi = 600)
+
+# (Optional high-quality vector version)
+ggsave("gut_microbiota_phylum_bordered.pdf", p,
+       width = 12, height = 6)
