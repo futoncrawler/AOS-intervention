@@ -1,0 +1,78 @@
+
+##########################################################
+# 📊 Build phyloseq object from QIIME2 files (full script)
+# Author: Natasia 💫
+# Requirements: qiime2R, phyloseq, tidyr, ggplot2
+##########################################################
+
+# 1️⃣ Install and load required packages
+if (!requireNamespace("qiime2R", quietly = TRUE)) remotes::install_github("jbisanz/qiime2R")
+if (!requireNamespace("phyloseq", quietly = TRUE)) install.packages("phyloseq")
+if (!requireNamespace("tidyr", quietly = TRUE)) install.packages("tidyr")
+
+library(qiime2R)
+library(phyloseq)
+library(tidyr)
+library(ggplot2)
+
+# 2️⃣ Import your QIIME2 artifacts
+# (Make sure your working directory has these files or adjust paths)
+table_qza <- read_qza("table.qza")          # Feature table
+taxonomy_qza <- read_qza("taxonomy.qza")    # Taxonomy
+metadata <- read.table("metadata.tsv", header = TRUE, sep = "\t", row.names = 1)
+
+# Optional: include if you have a phylogenetic tree
+# tree_qza <- read_qza("rooted-tree.qza")
+
+# 3️⃣ Extract the actual data
+otu_table_object <- table_qza$data
+taxonomy_object <- taxonomy_qza$data
+
+# 4️⃣ Clean the taxonomy table
+taxonomy_object <- as.data.frame(taxonomy_object)
+rownames(taxonomy_object) <- taxonomy_object$Feature.ID
+taxonomy_object <- taxonomy_object[, -1]  # remove the Feature.ID column
+
+# 5️⃣ Match taxa across objects (avoid mismatches)
+common_taxa <- intersect(rownames(otu_table_object), rownames(taxonomy_object))
+otu_table_object <- otu_table_object[common_taxa, ]
+taxonomy_object <- taxonomy_object[common_taxa, ]
+
+# 6️⃣ Build the preliminary phyloseq object
+ps <- phyloseq(
+  otu_table(otu_table_object, taxa_are_rows = TRUE),
+  tax_table(as.matrix(taxonomy_object)),
+  sample_data(metadata)
+  # , phy_tree(tree_qza$data)  # uncomment if you have a tree
+)
+
+# 7️⃣ Split single 'Taxon' column into ranks if needed
+if ("Taxon" %in% colnames(tax_table(ps))) {
+  taxonomy_df <- as.data.frame(tax_table(ps))
+  taxonomy_split <- separate(
+    taxonomy_df,
+    col = "Taxon",
+    into = c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"),
+    sep = "; ",
+    fill = "right"
+  )
+  tax_table(ps) <- tax_table(as.matrix(taxonomy_split))
+}
+
+# 8️⃣ Verify that everything looks correct
+print(ps)
+colnames(tax_table(ps))   # Should show Kingdom, Phylum, Class, etc.
+sample_names(ps)[1:5]
+
+# 9️⃣ Quick visualization — stacked bar plot by Phylum
+plot_bar(ps, fill = "Phylum") +
+  theme_bw() +
+  labs(title = "Gut Microbiota Composition by Phylum",
+       x = "Sample",
+       y = "Relative Abundance") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+##########################################################
+# ✅ Done! You now have a fully functional phyloseq object
+# You can use it for LEfSe, diversity analysis, etc.
+##########################################################
