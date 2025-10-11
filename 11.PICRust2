@@ -259,3 +259,201 @@ cat("Results saved as:\n",
     " - KO_volcano_plot_FDR0.1_2fold.png\n")
 
 browseURL(getwd())
+
+
+> library(readr)
+> library(dplyr)
+> library(ggplot2)
+> 
+> pathway_table <- read_tsv("~/Desktop/Healthy-adults-V3V4/q2-picrust2_output/pathabun_exported/pathabunｰfeature-table.biom.tsv", skip = 1)
+Rows: 369 Columns: 37                                                                                                                    
+── Column specification ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Delimiter: "\t"
+chr  (1): #OTU ID
+dbl (36): Ina-103-A, Ina-103-B, Ina-105-A, Ina-105-B, Ina-113-A, Ina-113-B, Ina-124-A, Ina-124-B, Ina-128-A, Ina-128-B, Ina-145-A, Ina-...
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+> metadata <- read.table("~/Desktop/Healthy-adults-V3V4/metadata_16S_adult copy.txt", header = TRUE, sep = "\t", row.names = 1)
+> athway_long <- pathway_table %>%
++   tidyr::pivot_longer(-`#OTU ID`, names_to = "SampleID", values_to = "Abundance") %>%
++   left_join(metadata %>% tibble::rownames_to_column("SampleID"), by = "SampleID")
+> pathway_summary <- pathway_long %>%
++   group_by(Group, `#OTU ID`) %>%
++   summarise(mean_abundance = mean(Abundance), .groups = "drop")
+Error: object 'pathway_long' not found
+> 
+> pathway_long <- pathway_table %>%
++   tidyr::pivot_longer(-`#OTU ID`, names_to = "SampleID", values_to = "Abundance") %>%
++   left_join(metadata %>% tibble::rownames_to_column("SampleID"), by = "SampleID")
+> 
+> pathway_summary <- pathway_long %>%
++   group_by(Group, `#OTU ID`) %>%
++   summarise(mean_abundance = mean(Abundance), .groups = "drop")
+> top_pathways <- pathway_summary %>%
++   group_by(`#OTU ID`) %>%
++   summarise(total = sum(mean_abundance)) %>%
++   top_n(10, total) %>%
++   pull(`#OTU ID`)
+> 
+> ggplot(filter(pathway_summary, `#OTU ID` %in% top_pathways),
++        aes(x = Group, y = mean_abundance, fill = Group)) +
++   geom_bar(stat = "identity", position = "dodge") +
++   facet_wrap(~ `#OTU ID`, scales = "free_y") +
++   theme_bw() +
++   labs(title = "Top 10 Predicted Pathways (PICRUSt2)",
++        x = "Group", y = "Mean Predicted Abundance")
+> pathway_long <- pathway_table %>%
++   tidyr::pivot_longer(-`#OTU ID`, names_to = "SampleID", values_to = "Abundance") %>%
++   left_join(metadata %>% tibble::rownames_to_column("SampleID"), by = "SampleID")
+> pathway_long$Group <- factor(pathway_long$Group,
++                              levels = c("Baseline", "AOS-4-weeks"))
+> pathway_summary$Group <- factor(pathway_summary$Group,
++                                 levels = c("Baseline", "AOS-4-weeks"))
+> ggplot(filter(pathway_summary, `#OTU ID` %in% top_pathways),
++        aes(x = Group, y = mean_abundance, fill = Group)) +
++   geom_bar(stat = "identity", position = "dodge", color = "black") +  # adds border too
++   facet_wrap(~ `#OTU ID`, scales = "free_y") +
++   theme_bw(base_size = 12) +
++   labs(title = "Top 10 Predicted Pathways (PICRUSt2)",
++        x = "Group", y = "Mean Predicted Abundance")
+> ggplot(filter(pathway_summary, `#OTU ID` %in% top_pathways),
++        aes(x = Group, y = mean_abundance, fill = Group)) +
++   geom_bar(stat = "identity", position = "dodge", color = "black") +
++   facet_wrap(~ `#OTU ID`, scales = "free_y", ncol = 5) +  # fewer columns for better spacing
++   theme_bw(base_size = 12) +
++   labs(
++     title = "Top 10 Predicted Pathways (PICRUSt2)",
++     x = "Group",
++     y = "Mean Predicted Abundance"
++   ) +
++   theme(
++     strip.text = element_text(size = 8, face = "bold"),    # smaller pathway names
++     axis.text.x = element_text(size = 9, angle = 45, hjust = 1),  # tilt labels to prevent overlap
++     legend.position = "none",
++     plot.title = element_text(hjust = 0.5)
++   )
+> library(stringr)
+> pathway_summary$`#OTU ID` <- str_wrap(pathway_summary$`#OTU ID`, width = 30)
+> ggplot(filter(pathway_summary, `#OTU ID` %in% top_pathways),
++        aes(x = Group, y = mean_abundance, fill = Group)) +
++   geom_bar(stat = "identity", position = "dodge", color = "black") +
++   facet_wrap(~ `#OTU ID`, scales = "free_y", ncol = 5) +  # fewer columns for better spacing
++   theme_bw(base_size = 12) +
++   labs(
++     title = "Top 10 Predicted Pathways (PICRUSt2)",
++     x = "Group",
++     y = "Mean Predicted Abundance"
++   ) +
++   theme(
++     strip.text = element_text(size = 8, face = "bold"),    # smaller pathway names
++     axis.text.x = element_text(size = 9, angle = 45, hjust = 1),  # tilt labels to prevent overlap
++     legend.position = "none",
++     plot.title = element_text(hjust = 0.5)
++   )
+> library(stringr)
+> pathway_summary$`#OTU ID` <- str_wrap(pathway_summary$`#OTU ID`, width = 30)
+> ggplot(filter(pathway_summary, `#OTU ID` %in% top_pathways),
++        aes(x = Group, y = mean_abundance, fill = Group)) +
++   geom_bar(stat = "identity", position = "dodge", color = "black") +
++   facet_wrap(~ `#OTU ID`, scales = "free_y", ncol = 5) +  # fewer columns for better spacing
++   theme_bw(base_size = 12) +
++   labs(
++     title = "Top 10 Predicted Pathways (PICRUSt2)",
++     x = "Group",
++     y = "Mean Predicted Abundance"
++   ) +
++   theme(
++     strip.text = element_text(size = 8, face = "bold"),    # smaller pathway names
++     axis.text.x = element_text(size = 9, angle = 45, hjust = 1),  # tilt labels to prevent overlap
++     legend.position = "none",
++     plot.title = element_text(hjust = 0.5)
++   )
+> ggsave(
++   filename = "picrust2_top10_pathways.png",  # output file name
++   plot = last_plot(),                        # saves the most recent plot
++   width = 14,                                # wider for readability
++   height = 8,
++   dpi = 600                                  # high resolution (good for publication)
++ )
+> wilcox.test(Abundance ~ Group, data = subset(pathway_long, `#OTU ID` == "GLYCOCAT-PWY"))
+
+	Wilcoxon rank sum exact test
+
+data:  Abundance by Group
+W = 213, p-value = 0.1108
+alternative hypothesis: true location shift is not equal to 0
+
+> wilcox.test(Abundance ~ Group, data = subset(pathway_long, `#OTU ID` == "ILEUSYN-PWY"))
+
+	Wilcoxon rank sum exact test
+
+data:  Abundance by Group
+W = 213, p-value = 0.1108
+alternative hypothesis: true location shift is not equal to 0
+
+> wilcox.test(Abundance ~ Group, data = subset(pathway_long, `#OTU ID` == "NONOXIPENT-PWY"))
+
+	Wilcoxon rank sum exact test
+
+data:  Abundance by Group
+W = 201, p-value = 0.2262
+alternative hypothesis: true location shift is not equal to 0
+
+> wilcox.test(Abundance ~ Group, data = subset(pathway_long, `#OTU ID` == "PWY-5101"))
+
+	Wilcoxon rank sum exact test
+
+data:  Abundance by Group
+W = 209, p-value = 0.1427
+alternative hypothesis: true location shift is not equal to 0
+
+> wilcox.test(Abundance ~ Group, data = subset(pathway_long, `#OTU ID` == "PWY-6737"))
+
+	Wilcoxon rank sum exact test
+
+data:  Abundance by Group
+W = 216, p-value = 0.09071
+alternative hypothesis: true location shift is not equal to 0
+
+> wilcox.test(Abundance ~ Group, data = subset(pathway_long, `#OTU ID` == "PWY-7111"))
+
+	Wilcoxon rank sum exact test
+
+data:  Abundance by Group
+W = 200, p-value = 0.2387
+alternative hypothesis: true location shift is not equal to 0
+
+> wilcox.test(Abundance ~ Group, data = subset(pathway_long, `#OTU ID` == "PWY-7220"))
+
+	Wilcoxon rank sum exact test
+
+data:  Abundance by Group
+W = 196, p-value = 0.2931
+alternative hypothesis: true location shift is not equal to 0
+
+> wilcox.test(Abundance ~ Group, data = subset(pathway_long, `#OTU ID` == "PWY-7222"))
+
+	Wilcoxon rank sum exact test
+
+data:  Abundance by Group
+W = 196, p-value = 0.2931
+alternative hypothesis: true location shift is not equal to 0
+
+> wilcox.test(Abundance ~ Group, data = subset(pathway_long, `#OTU ID` == "PWY-7663"))
+
+	Wilcoxon rank sum exact test
+
+data:  Abundance by Group
+W = 210, p-value = 0.1341
+alternative hypothesis: true location shift is not equal to 0
+
+> wilcox.test(Abundance ~ Group, data = subset(pathway_long, `#OTU ID` == "VALSYN-PWY"))
+
+	Wilcoxon rank sum exact test
+
+data:  Abundance by Group
+W = 213, p-value = 0.1108
+alternative hypothesis: true location shift is not equal to 0
+
+> 
