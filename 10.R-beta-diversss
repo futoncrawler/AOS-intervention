@@ -199,3 +199,4 @@ ggsave(
 permanova <- adonis2(unweighted_dist ~ Group, data = metadata, permutations = 999)
 print("PERMANOVA result for Unweighted UniFrac:")
 print(permanova)
+
