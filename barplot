@@ -1,0 +1,99 @@
+# Load libraries
+library(tidyverse)
+library(viridis)
+library(scales)   # for math_format()
+
+# ------------------------------
+# 1️⃣ Read data
+# ------------------------------
+# Replace with your file paths
+genus_abund <- read.delim("genus_abundance_table.csv", check.names = FALSE)
+meta <- read.delim("metadata.csv", check.names = FALSE)
+
+# ------------------------------
+# 2️⃣ Pivot to long format
+# ------------------------------
+genus_long <- genus_abund %>%
+  pivot_longer(
+    cols = -SampleID,
+    names_to = "Genus",
+    values_to = "Abundance"
+  )
+
+# ------------------------------
+# 3️⃣ Merge with metadata
+# ------------------------------
+merged_genus <- genus_long %>%
+  left_join(meta, by = "SampleID")
+
+# ------------------------------
+# 4️⃣ Compute relative abundance per sample
+# ------------------------------
+merged_genus <- merged_genus %>%
+  group_by(SampleID) %>%
+  mutate(RelativeAbundance = Abundance / sum(Abundance)) %>%
+  ungroup()
+
+# ------------------------------
+# 5️⃣ Order group (Baseline on top, AOS-4-weeks bottom)
+# ------------------------------
+merged_genus$Group <- factor(merged_genus$Group, 
+                             levels = c("AOS-4-weeks", "Baseline"))
+
+# ------------------------------
+# 6️⃣ Apply threshold to simplify
+# ------------------------------
+threshold <- 0.01  # 1% mean abundance threshold
+
+rare_genera <- merged_genus %>%
+  group_by(Genus) %>%
+  summarise(global_mean = mean(RelativeAbundance, na.rm = TRUE)) %>%
+  filter(global_mean < threshold) %>%
+  pull(Genus)
+
+merged_genus_simplified <- merged_genus %>%
+  mutate(Genus = ifelse(Genus %in% rare_genera, "Other", Genus))
+
+# Reorder genera by mean abundance for nice vertical order
+genus_order <- merged_genus_simplified %>%
+  group_by(Genus) %>%
+  summarise(mean_abund = mean(RelativeAbundance)) %>%
+  arrange(mean_abund) %>%
+  pull(Genus)
+
+merged_genus_simplified$Genus <- factor(merged_genus_simplified$Genus, 
+                                        levels = genus_order)
+
+# ------------------------------
+# 7️⃣ Plot — Horizontal boxplot + log10 scale
+# ------------------------------
+p_genus <- ggplot(merged_genus_simplified,
+                  aes(y = Genus, x = RelativeAbundance, fill = Group)) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.8,
+               position = position_dodge(width = 0.8)) +
+  scale_x_log10(
+    limits = c(1e-4, 1),  # adjust range as needed
+    breaks = 10^seq(-4, 0, by = 1),
+    labels = scales::math_format(10^.x)
+  ) +
+  scale_fill_viridis_d(option = "turbo", end = 0.8) +
+  labs(
+    title = paste0("Genus-Level Relative Abundance (log10 scale, ≥ ",
+                   threshold * 100, "% mean abundance)"),
+    x = "Relative Abundance (log10)",
+    y = "Genus"
+  ) +
+  theme_bw() +
+  theme(
+    legend.title = element_blank(),
+    panel.grid.major.y = element_blank(),
+    axis.text.y = element_text(size = 8)
+  )
+
+# ------------------------------
+# 8️⃣ Show and save
+# ------------------------------
+print(p_genus)
+
+ggsave("genus_boxplot_horizontal_log10.png",
+       plot = p_genus, width = 10, height = 8, dpi = 300)
