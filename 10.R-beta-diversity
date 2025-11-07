@@ -123,3 +123,97 @@ anova(disp)
 
 💾 Save Plot
 ggsave("unweighted_unifrac_pcoa.png", width = 6, height = 5, dpi = 300)
+
+
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(vegan)
+
+# ==========================
+# 1️⃣ Load metadata and distance matrix
+# ==========================
+
+# Metadata
+metadata <- read_tsv("metadata.tsv")
+
+# Distance matrix exported from QIIME2
+# Skip comment lines if present
+dist_mat <- read_tsv("distance-matrix.tsv", comment = "#")
+
+# Convert to data.frame and set rownames as sample IDs
+dist_mat_df <- as.data.frame(dist_mat)
+rownames(dist_mat_df) <- dist_mat_df[[1]]  # first column contains sample IDs
+dist_mat_df <- dist_mat_df[,-1]            # remove first column
+
+# Convert to matrix
+dist_mat_matrix <- as.matrix(dist_mat_df)
+
+# Check rownames match metadata
+all(rownames(dist_mat_matrix) %in% metadata$SampleID)  # should be TRUE
+
+# Reorder metadata to match distance matrix
+metadata_ordered <- metadata %>%
+  filter(SampleID %in% rownames(dist_mat_matrix)) %>%
+  arrange(match(SampleID, rownames(dist_mat_matrix)))
+
+# ==========================
+# 2️⃣ PCoA (Principal Coordinates Analysis)
+# ==========================
+pcoa_res <- cmdscale(dist_mat_matrix, eig = TRUE, k = 2)
+
+# Variance explained by PC1 and PC2
+eig_vals <- pcoa_res$eig
+var_explained <- eig_vals / sum(eig_vals[eig_vals > 0]) * 100
+pc1_text <- paste0("PC1 (", round(var_explained[1], 1), "%)")
+pc2_text <- paste0("PC2 (", round(var_explained[2], 1), "%)")
+
+# Create PCoA data frame
+pcoa_df <- data.frame(
+  SampleID = rownames(pcoa_res$points),
+  PC1 = pcoa_res$points[,1],
+  PC2 = pcoa_res$points[,2]
+)
+
+# Merge with ordered metadata
+pcoa_df <- merge(pcoa_df, metadata_ordered, by.x = "SampleID", by.y = "SampleID")
+
+# ==========================
+# 3️⃣ PERMANOVA test
+# ==========================
+adonis_res <- adonis2(dist_mat_matrix ~ Group, data = metadata_ordered, permutations = 999)
+print(adonis_res)
+
+# Extract p-value for plotting
+pval_text <- paste0("PERMANOVA p = ", signif(adonis_res$`Pr(>F)`[1], 3))
+
+# ==========================
+# 4️⃣ PCoA plot
+# ==========================
+p_beta <- ggplot(pcoa_df, aes(x = PC1, y = PC2, color = Group)) +
+  geom_point(size = 3, alpha = 0.8) +
+  stat_ellipse(aes(fill = Group), geom = "polygon", alpha = 0.2, color = NA) +
+  labs(
+    title = "PCoA (Beta Diversity)",
+    subtitle = pval_text,
+    x = pc1_text,
+    y = pc2_text
+  ) +
+  theme_bw(base_size = 12) +
+  scale_color_manual(values = c("Baseline"="#999999","AOS-4-weeks"="#0072B2")) +
+  scale_fill_manual(values = c("Baseline"="#999999","AOS-4-weeks"="#0072B2")) +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(face = "bold", size = 14),
+    plot.subtitle = element_text(size = 12),
+    axis.text = element_text(size = 11)
+  )
+
+# Print plot
+print(p_beta)
+
+# ==========================
+# 5️⃣ Save figure
+# ==========================
+ggsave("beta_diversity_pcoa.png", plot = p_beta, width = 8, height = 6, dpi = 600)
+ggsave("beta_diversity_pcoa.pdf", plot = p_beta, width = 8, height = 6)
