@@ -1,0 +1,121 @@
+# === 1. Load packages ===
+library(tidyverse)
+library(ggpubr)
+library(viridis)
+
+# === 2. Load data ===
+abund <- read.delim("~/Desktop/Genus-abundance.tsv", check.names = FALSE)
+meta  <- read.delim("~/Desktop/metadata.tsv", check.names = FALSE)
+
+# === 3. Keep only SampleID + numeric genus columns ===
+abund_clean <- abund %>%
+  select(SampleID, where(is.numeric))
+
+# === 4. Merge metadata and abundance ===
+merged <- left_join(meta, abund_clean, by = "SampleID")
+
+# === 5. Pivot longer (keep only SampleID, Group, numeric taxa) ===
+rel_long <- merged %>%
+  select(SampleID, Group, where(is.numeric)) %>%
+  pivot_longer(
+    cols = -c(SampleID, Group),
+    names_to = "Genus",
+    values_to = "Abundance"
+  )
+
+# === 6. Shorten genus names (keep only last part after "g__") ===
+rel_long <- rel_long %>%
+  mutate(Genus = ifelse(grepl("g__", Genus),
+                        sub(".*g__", "", Genus),
+                        Genus))
+
+# === 7. Identify genera with mean abundance >=1% ===
+genus_filter <- rel_long %>%
+  group_by(Genus) %>%
+  summarise(mean_abund = mean(Abundance, na.rm = TRUE)) %>%
+  mutate(Genus_grouped = ifelse(mean_abund < 1, "Others", Genus)) %>%
+  pull(Genus_grouped)
+
+# === 8. Replace low-abundance genera with "Others" ===
+rel_long <- rel_long %>%
+  left_join(
+    rel_long %>%
+      group_by(Genus) %>%
+      summarise(mean_abund = mean(Abundance, na.rm = TRUE)) %>%
+      mutate(Genus_grouped = ifelse(mean_abund < 1, "Others", Genus)) %>%
+      select(Genus, Genus_grouped),
+    by = "Genus"
+  ) %>%
+  mutate(Genus = Genus_grouped) %>%
+  select(-Genus_grouped, -mean_abund)
+
+# === 9. Add log10 transform with pseudocount ===
+rel_long <- rel_long %>%
+  mutate(log10_Abundance = log10(Abundance + 0.01))
+
+# === 10. Wilcoxon signed-rank test per genus ===
+wilcox_results <- rel_long %>%
+  group_by(Genus) %>%
+  summarise(
+    p_value = tryCatch(
+      suppressWarnings(
+        wilcox.test(
+          log10_Abundance[Group == "Baseline"],
+          log10_Abundance[Group == "AOS-4-weeks"],
+          paired = TRUE
+        )$p.value
+      ),
+      error = function(e) NA
+    )
+  ) %>%
+  mutate(p_adj = p.adjust(p_value, method = "fdr"))
+
+# === 11. Order genera by mean difference ===
+genus_order <- rel_long %>%
+  group_by(Genus, Group) %>%
+  summarise(mean_abund = mean(log10_Abundance), .groups = "drop") %>%
+  pivot_wider(names_from = Group, values_from = mean_abund) %>%
+  mutate(diff = `AOS-4-weeks` - Baseline) %>%
+  arrange(diff) %>%
+  pull(Genus)
+
+# Merge p-values for plotting
+plot_data <- left_join(rel_long, wilcox_results, by = "Genus")
+
+# === 12. Remove zeros from plot points for visualization only ===
+plot_data_vis <- plot_data %>%
+  filter(Abundance > 0)
+
+# === 13. Plot ===
+ggplot(plot_data_vis, aes(x = factor(Genus, levels = genus_order),
+                          y = log10_Abundance,
+                          fill = Group)) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.85) +
+  geom_jitter(position = position_jitterdodge(jitter.width = 0.1),
+              alpha = 0.4, size = 1) +
+  coord_flip() +
+  scale_y_continuous(limits = c(-5, NA)) +
+  scale_fill_manual(values = c("Baseline" = "#F8766D",
+                               "AOS-4-weeks" = "#00BFC4")) +
+  labs(
+    x = NULL,
+    y = expression(Log[10]*" relative abundance"),
+    fill = NULL
+  ) +
+  theme_bw(base_size = 12) +
+  theme(
+    axis.text.y = element_text(face = "italic"),
+    legend.position = "top"
+  ) +
+  stat_compare_means(
+    aes(label = ifelse(p_adj < 0.05, "*", "")),
+    method = "wilcox.test",
+    paired = TRUE,
+    hide.ns = TRUE,
+    label.x = 1.05
+  )
+
+
+	•	Use a smaller pseudocount, e.g., 1e-6 instead of 0.01:
+	•	Keep zeros in the plot (or at least the very small abundances) so that the boxes extend naturally.
+	•	Optionally, remove the scale_y_continuous(limits = c(-5, NA)) line — letting ggplot auto-scale will show the full range.
