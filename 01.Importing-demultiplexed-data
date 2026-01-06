@@ -16,7 +16,7 @@ the lane number, the direction of the read (i.e. R1 or R2), and the set number.
 #Importing demultiplexed data that follows some common formatting conventions (the Casava formats)
 qiime tools import \
 --type 'SampleData[PairedEndSequencesWithQuality]' \
---input-path /Users/shirai/Desktop/gut-microbiota-analysis/250819_healthy-adult_qiime2-2024.5/fastq \
+--input-path #insert-directory: e.g. /Users/shirai/Desktop/gut-microbiota-analysis/250819_healthy-adult_qiime2-2024.5/fastq \
 --input-format CasavaOneEightSingleLanePerSampleDirFmt \
 --output-path demux-paired-end.qza
 
