@@ -1,3 +1,15 @@
+Prepare:
+・metadata file, lose the sharp (#) in sampleID because R would ignore the data with #
+・tsv files of beta-diversity data 
+  convert using code below:
+
+qiime tools export \
+  --input-path bray_curtis_distance.qza \
+  --output-path bray_curtis_export
+
+#conduct also for other beta-diversity data you would like to analyze
+
+
 # =======================================================
 # Bray–Curtis PCoA with fixed color scheme
 # =======================================================
