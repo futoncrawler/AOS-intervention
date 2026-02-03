@@ -1,9 +1,12 @@
-From the tutorial page:
+First install PICRust2 after activating qiime2-amplicon-2024.5 environment
+conda install q2-picrust2=2024.5 \
+-c conda-forge \
+-c bioconda \
+-c picrust 
 
-It assumes you have table.qza (feature table) and rep-seqs.qza (representative sequences). 
-note（ノート）
-
-It runs:
+Necessary artifact(s):
+・FeatureTable：　table.qza
+・Representative Sequences： rep-seqs.qza
 
 qiime picrust2 full-pipeline \
   --i-table table.qza \
@@ -13,32 +16,44 @@ qiime picrust2 full-pipeline \
 
 
 This is a convenience wrapper that runs the PICRUSt2 steps (placement, hidden-state prediction, etc.). 
-note（ノート）
-
 It then suggests summarizing the outputs (pathway_abundance.qza, ec_metagenome.qza, ko_metagenome.qza) via:
 
 qiime feature-table summarize \
   --i-table q2-picrust2_output/pathway_abundance.qza \
   --o-visualization q2-picrust2_output/pathway_abundance.qzv
 
+qiime feature-table summarize \
+  --i-table q2-picrust2_output/ec_metagenome.qza \
+  --o-visualization q2-picrust2_output/ec_metagenome.qzv
 
-And similarly for the ec_metagenome.qza and ko_metagenome.qza files. 
-note（ノート）
+qiime feature-table summarize \
+  --i-table q2-picrust2_output/ko_metagenome.qza \
+  --o-visualization q2-picrust2_output/ko_metagenome.qzv
 
-Next, it runs a QIIME2 core metrics (diversity) analysis on pathway_abundance.qza:
+
+Next, it runs a QIIME2 core metrics (diversity) analysis on pathway_abundance.qza, ec_metagenome.qza, ko_metagenome.qza:
+
+qiime diversity core-metrics \
+  --i-table q2-picrust2_output/ec_metagenome.qza \
+  --p-sampling-depth #checknumber-from-qzv \
+  --m-metadata-file metadata_16s_adult.txt \
+  --output-dir q2-picrust2_output/ecmetagenome_core_metrics_out
+
+qiime diversity core-metrics \
+  --i-table q2-picrust2_output/ko_metagenome.qza \
+  --p-sampling-depth #checknumber-from-qzv \
+  --m-metadata-file metadata_16s_adult.txt \
+  --output-dir q2-picrust2_output/kometagenome_core_metrics_out
 
 qiime diversity core-metrics \
   --i-table q2-picrust2_output/pathway_abundance.qza \
-  --p-sampling-depth <some number> \
-  --m-metadata-file sample-metadata.txt \
+  --p-sampling-depth #checknumber-from-qzv \
+  --m-metadata-file metadata_16s_adult.txt \
   --output-dir q2-picrust2_output/pathabun_core_metrics_out
 
-
+for sampling depth 
 The tutorial suggests you pick the minimum feature count (i.e. the smallest number of counts across samples) from the pathway table to set as the sampling depth. 
-note（ノート）
-
-Then it shows commands to export the .qza results (like pathway_abundance.qza, ec_metagenome.qza, ko_metagenome.qza) to text/BIOM formats and convert to .tsv via biom convert. 
-note（ノート）
+Then it shows commands to export the .qza results (like pathway_abundance.qza, ec_metagenome.qza, ko_metagenome.qza) to text/BIOM formats and convert to .tsv via biom convert.
 
 
 # Install ANCOM-BC if you haven't yet
