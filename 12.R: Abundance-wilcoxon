@@ -1,3 +1,7 @@
+Prepare:
+・relative abundance data: delete the second row that has "numeric" labels on it, change "id" to "SampleID"
+・for metadata, delete # in #SampleID, sort the sample list so the order is the same with relative abundance data
+
 ############################################################
 # Agarooligosaccharide (AOS) intervention - Genus analysis
 # Using taxa collapse level 6 (genus level)
