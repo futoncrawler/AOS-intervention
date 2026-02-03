@@ -42,7 +42,7 @@ custom_colors <- c("Baseline" = "#00BFC4",   # teal blue-green
                    "AOS-4-weeks" = "#F8766D") # pinkish-salmon
 
 # 7️⃣ Plot
-ggplot(pcoa_df, aes(x = PC1, y = PC2, color = Group)) +
+p <- ggplot(pcoa_df, aes(x = PC1, y = PC2, color = Group)) +
   geom_point(size = 3, alpha = 0.8) +
   stat_ellipse(level = 0.95, linetype = 2, linewidth = 0.8) +
   scale_color_manual(values = custom_colors) +
@@ -61,6 +61,12 @@ ggplot(pcoa_df, aes(x = PC1, y = PC2, color = Group)) +
 # 8️⃣ PERMANOVA
 permanova <- adonis2(bray_dist ~ Group, data = metadata, permutations = 999)
 print(permanova)
+
+# 9️⃣ Save to PNG
+ggsave(
+  filename = "~/Desktop/bray-curtis.png",
+  plot = p, width = 8, height = 6, dpi = 300
+)
 
 # =======================================================
 # PCoA for Weighted UniFrac
