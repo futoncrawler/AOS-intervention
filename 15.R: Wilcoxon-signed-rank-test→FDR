@@ -1,0 +1,126 @@
+# ===============================
+# 0. Load packages
+# ===============================
+if (!requireNamespace("tidyverse", quietly = TRUE)) {
+  install.packages("tidyverse", repos = "https://cloud.r-project.org")
+}
+library(tidyverse)
+
+# ===============================
+# 1. Load data
+# ===============================
+species <- read.delim("species-abundance.tsv", 
+                      header = TRUE, sep = "\t", check.names = FALSE)
+
+meta <- read.delim("metadata_16S_adult.txt", 
+                   header = TRUE, sep = "\t")
+
+# ===============================
+# 2. Merge data
+# ===============================
+merged <- merge(species, meta, by = "SampleID")
+
+# ===============================
+# 3. Split groups (paired design)
+# ===============================
+baseline <- merged %>% filter(Group == "Baseline")
+aos      <- merged %>% filter(Group == "AOS-4-weeks")
+
+# Ensure pairing
+stopifnot(all(sort(unique(baseline$Individiual)) == 
+              sort(unique(aos$Individiual))))
+
+# ===============================
+# 4. Select species columns
+# ===============================
+species_cols <- setdiff(colnames(species), "SampleID")
+
+# ===============================
+# 5. Filter rare species (IMPORTANT)
+# ===============================
+keep <- colMeans(species[species_cols] > 0) > 0.2
+species_cols <- species_cols[keep]
+
+# ===============================
+# 6. Initialize results
+# ===============================
+results <- data.frame(
+  Species = species_cols,
+  W = NA,
+  p = NA
+)
+
+# ===============================
+# 7. Paired Wilcoxon test
+# ===============================
+for (i in seq_along(species_cols)) {
+  
+  s <- species_cols[i]
+  
+  before <- baseline[match(aos$Individiual, baseline$Individiual), s]
+  after  <- aos[, s]
+  
+  # Skip invalid cases
+  if (all(is.na(before)) || all(is.na(after)) || sd(c(before, after)) == 0) {
+    next
+  }
+  
+  test <- wilcox.test(before, after, paired = TRUE, exact = FALSE)
+  
+  results$W[i] <- test$statistic
+  results$p[i] <- test$p.value
+}
+
+cat("✅ Wilcoxon tests complete (species level)\n")
+
+# ===============================
+# 8. FDR correction
+# ===============================
+results$q <- p.adjust(results$p, method = "BH")
+
+# ===============================
+# 9. Fold change
+# ===============================
+fold_change <- sapply(species_cols, function(x) {
+  (mean(aos[[x]], na.rm = TRUE) + 1e-6) /
+  (mean(baseline[[x]], na.rm = TRUE) + 1e-6)
+})
+
+results$log2FC <- log2(fold_change)
+
+# ===============================
+# 10. Extract significant results
+# ===============================
+sig_fdr <- results %>%
+  filter(q < 0.05) %>%
+  arrange(q)
+
+sig_p <- results %>%
+  filter(p < 0.05) %>%
+  arrange(p)
+
+# ===============================
+# 11. Save outputs (Desktop)
+# ===============================
+write.table(results,
+            "~/Desktop/all_species_results_with_FDR.tsv",
+            sep = "\t", quote = FALSE, row.names = FALSE)
+
+write.table(sig_fdr,
+            "~/Desktop/significant_species_FDR0.05.tsv",
+            sep = "\t", quote = FALSE, row.names = FALSE)
+
+write.table(sig_p,
+            "~/Desktop/significant_species_p0.05.tsv",
+            sep = "\t", quote = FALSE, row.names = FALSE)
+
+# ===============================
+# 12. Summary
+# ===============================
+cat("Total species tested:", nrow(results), "\n")
+cat("FDR-significant species (q < 0.05):", nrow(sig_fdr), "\n")
+cat("Nominally significant species (p < 0.05):", nrow(sig_p), "\n")
+
+if (nrow(sig_fdr) == 0) {
+  cat("⚠️ No species passed FDR (very common at species level)\n")
+}
